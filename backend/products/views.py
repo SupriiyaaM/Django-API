@@ -1,11 +1,12 @@
-from rest_framework import authentication, generics, mixins, permissions
+from rest_framework import generics, mixins #permissions #authentication
 from rest_framework.response import Response 
 from rest_framework.decorators import api_view
 from django.shortcuts import get_object_or_404
 from .models import Product
+#from ..api.permissions import IsStaffEditorPermission
 from .serliaizers import ProductSerializer
-
-
+#from api.authentication import TokenAuthentication
+from api.mixins import StaffEditorPermissionMixin
 
 class ProductMixinView(mixins.ListModelMixin, mixins.RetrieveModelMixin,
                        mixins.CreateModelMixin, generics.GenericAPIView):
@@ -36,6 +37,7 @@ product_mixin_view = ProductMixinView.as_view()
 class ProductCreateAPIView(generics.CreateAPIView): 
     queryset = Product.objects.all()
     serializer_class = ProductSerializer 
+    #permission_classes = [permissions.IsAdminUser, IsStaffEditorPermission]
     
     def perform_create(self, serializer):
         title = serializer.validated_data.get('title')
@@ -47,20 +49,23 @@ class ProductCreateAPIView(generics.CreateAPIView):
 product_create_view = ProductCreateAPIView.as_view()
 
 
-class ProductDetailAPIView(generics.RetrieveAPIView): #from browser -> RAV of generics from DRF
+class ProductDetailAPIView(StaffEditorPermissionMixin,generics.RetrieveAPIView): #from browser -> RAV of generics from DRF
     queryset = Product.objects.all()
     serializer_class = ProductSerializer 
+    #permission_classes = [permissions.IsAdminUser, IsStaffEditorPermission]
     #lookup_field = 'pk' #similar to Product.objects.get('pk') 
 #this below is passed to urls.py -> products
 product_detail_view = ProductDetailAPIView.as_view()
 
 
 
-class ProductListCreateAPIView(generics.ListCreateAPIView): 
+class ProductListCreateAPIView(StaffEditorPermissionMixin,generics.ListCreateAPIView): 
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
-    authentication_classes = [authentication.SessionAuthentication]
-    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+    #below is not required after changing settings.py
+    #authentication_classes = [authentication.SessionAuthentication, TokenAuthentication] 
+    #from authentication.TokenAuthentication after authentication.py
+    #permission_classes = [permissions.IsAdminUser, IsStaffEditorPermission] #permissions.DjangoModelPermissions
     
     def perform_list_create(self, serializer):
         title = serializer.validated_data.get('title')
@@ -106,10 +111,11 @@ def product_alt_view(request, pk = None, *args, **kwargs):
         return Response({"invalid":"incorrect data."}, status = 400)
 
 
-class ProductUpdateAPIView(generics.UpdateAPIView): 
+class ProductUpdateAPIView(StaffEditorPermissionMixin, generics.UpdateAPIView): 
     queryset = Product.objects.all()
     serializer_class = ProductSerializer 
     lookup_field = 'pk'
+    #permission_classes = [permissions.IsAdminUser,IsStaffEditorPermission]
     def perform_update(self,serializer):
         instance = serializer.save()
         if not instance.content:
@@ -117,10 +123,11 @@ class ProductUpdateAPIView(generics.UpdateAPIView):
 product_update_view = ProductUpdateAPIView.as_view()
 
 
-class ProductDestroyAPIView(generics.DestroyAPIView): 
+class ProductDestroyAPIView(StaffEditorPermissionMixin, generics.DestroyAPIView): 
     queryset = Product.objects.all()
     serializer_class = ProductSerializer 
     lookup_field = 'pk'
+    #permission_classes = [IsStaffEditorPermission]
     def perform_delete(self,instance):
         super().perform_destroy(instance)
 product_delete_view = ProductDestroyAPIView.as_view()
