@@ -10,7 +10,7 @@ from api.mixins import StaffEditorPermissionMixin
 
 class ProductMixinView(mixins.ListModelMixin, mixins.RetrieveModelMixin,
                        mixins.CreateModelMixin, generics.GenericAPIView):
-    queryset = Product.objects.all()
+    queryset = Product.objects.all() 
     serializer_class = ProductSerializer
     lookup_field = 'pk' #for retrieve, also default is pk, but change is here if required
     
@@ -67,13 +67,21 @@ class ProductListCreateAPIView(StaffEditorPermissionMixin,generics.ListCreateAPI
     #from authentication.TokenAuthentication after authentication.py
     #permission_classes = [permissions.IsAdminUser, IsStaffEditorPermission] #permissions.DjangoModelPermissions
     
-    def perform_list_create(self, serializer):
+    def perform_create(self, serializer):
+        #email = serializer.validated_data.pop('email') #pop before save for manipulating it
+        #print(email)
         title = serializer.validated_data.get('title')
         content = serializer.validated_data.get('content') or None
         if content is None:
             content = title
         serializer.save(content = content)
     #or send a Django signal
+    
+    def get_queryset(self, *args, **kwargs):
+        request = self.request
+        print(request.user) #prints out the user when you open the page
+        return super().get_queryset(*args, **kwargs)
+        
 product_list_create_view = ProductListCreateAPIView.as_view()
     
     
