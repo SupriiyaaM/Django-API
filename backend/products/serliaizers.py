@@ -14,7 +14,8 @@ class ProductSerializer(serializers.ModelSerializer):
     #repeat_title = serializers.CharField(source = 'title', read_only = True)
     class Meta:
         model = Product
-        fields = ['user','url','edit_url','id',
+        fields = [#'user',
+                  'url','edit_url','id',
                   #'repeat_title', 
                   'title','content', 'price', 'sale_price','my_discount']
         

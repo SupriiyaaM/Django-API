@@ -74,13 +74,17 @@ class ProductListCreateAPIView(StaffEditorPermissionMixin,generics.ListCreateAPI
         content = serializer.validated_data.get('content') or None
         if content is None:
             content = title
-        serializer.save(content = content)
+        serializer.save(user=self.request.user, content = content) #user=self.request.user added later, why?
     #or send a Django signal
     
     def get_queryset(self, *args, **kwargs):
+        qs= super().get_queryset(*args, **kwargs)
         request = self.request
-        print(request.user) #prints out the user when you open the page
-        return super().get_queryset(*args, **kwargs)
+        user = request.user
+        if not user.is_authenticated:
+            return Product.objects.none()
+        #print(request.user) #prints out the user when you open the page
+        return qs.filter(user = request.user)
         
 product_list_create_view = ProductListCreateAPIView.as_view()
     

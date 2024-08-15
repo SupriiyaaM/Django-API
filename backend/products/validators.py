@@ -10,9 +10,9 @@ from .models import Product
 
 def validate_title_no_hello(value):
     if "hello" in value.lower():
-        raise serializers.ValidationError(f"Hello is not allowed as a title.")
+        raise serializers.ValidationError(f"{value} is not allowed as a title.")
     return value
 
-unique_product_title = UniqueValidator(queryset= Product.objects.all()) #not case insensitive
+unique_product_title = UniqueValidator(queryset= Product.objects.all(), lookup='iexact') #not case insensitive
 
 
